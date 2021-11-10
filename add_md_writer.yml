@@ -1,0 +1,78 @@
+---
+- hosts: all
+  connection: local
+  tasks:
+      - name: Check if the Workflow Patcher already exists
+        stat:
+          path: /data/custom_playbooks/prd/add_md_writer
+        register: stat_result
+
+      - name: Clone the Workflow Patcher Repo, if it doesnt exist already
+        git:
+          repo: https://github.com/Slange-Mhath/archivematica-deployment
+          dest: /data/custom_playbooks/prd/add_md_writer
+          clone: yes
+          update: yes
+        when: not stat_result.stat.exists
+
+      - name: Check if the Archivematica Repo already exists
+        stat:
+          path: /opt/archivematica/
+        register: am_result
+
+      - name: Clone the offical Archivematica Repo, if it doesnt exist already
+        git:
+          repo: https://github.com/artefactual/archivematica
+          dest: /opt/archivematica/
+          clone: yes
+          update: yes
+          version: stable/1.13.x
+        when: not am_result.stat.exists
+
+      - name: Run the Workflow Patcher
+        script: /data/custom_playbooks/prd/add_md_writer/patcher/main.py "/opt/archivematica/archivematica/src/MCPServer/lib/assets/workflow.json" -o "/opt/archivematica/archivematica/src/MCPServer/lib/assets/bodleian_workflow.json"
+        args:
+          executable: python3
+
+      - name: Check if Md_writer Repo was already cloned
+        stat:
+          path: /data/custom_playbooks/prd/add_md_writer/md_writer
+        register: md_writer_repo_result
+
+      - name: Get Md_writer ClientModule
+        git:
+          repo: https://gitlab.bodleian.ox.ac.uk/archivematica/archivematica_clientscript_md_writer.git
+          dest: /data/custom_playbooks/prd/add_md_writer/md_writer
+          clone: yes
+          update: yes
+          version: main
+        when: not md_writer_repo_result.stat.exists
+
+      - name: Check if Md_writer.py is already added to ClientScripts
+        stat:
+          path: /opt/archivematica/archivematica/src/MCPClient/lib/clientScripts/md_writer.py
+        register: md_writer_clientScript_result
+
+      - name: Move Md_writer.py to clientScripts
+        command: mv /data/custom_playbooks/prd/add_md_writer/md_writer/md_writer.py /opt/archivematica/archivematica/src/MCPClient/lib/clientScripts/md_writer.py
+        when: not md_writer_clientScript_result.stat.exists
+
+      - name: Delete md_writer Repo
+        command: rm -r /data/custom_playbooks/prd/add_md_writer/md_writer
+        when: md_writer_clientScript_result.stat.exists
+
+      - name: Add md_writer to archivematicaClientModules
+        blockinfile:
+          path: /opt/archivematica/archivematica/src/MCPClient/lib/archivematicaClientModules
+          block: |
+            md_writer_v0.0 = md_writer
+
+      - name: Change bag_with_empty_directories
+        ansible.builtin.replace:
+          path: /opt/archivematica/archivematica/src/MCPClient/lib/clientScripts/bag_with_empty_directories.py
+          regexp: 'payload_entries = _PAYLOAD_ENTRIES + ("METS.%s.xml" % sip_uuid,)'
+          replace: 'payload_entries = _PAYLOAD_ENTRIES + ("METS.%s.xml" % sip_uuid,"metadata_output.json",)'
+
+
+
+
