@@ -34,6 +34,12 @@
         args:
           executable: python3
 
+      - name: Rename the default workflow.json
+        command: mv /opt/archivematica/archivematica/src/MCPServer/lib/assets/workflow.json /opt/archivematica/archivematica/src/MCPServer/lib/assets/default_workflow.json
+
+      - name: Rename the bodleian workflow.json
+        command: mv /opt/archivematica/archivematica/src/MCPServer/lib/assets/bodleian_workflow.json /opt/archivematica/archivematica/src/MCPServer/lib/assets/workflow.json
+
       - name: Check if Md_writer Repo was already cloned
         stat:
           path: /data/custom_playbooks/prd/add_md_writer/md_writer
