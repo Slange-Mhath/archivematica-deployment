@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: localhost
   connection: local
   tasks:
       - name: Check if the Workflow Patcher already exists
