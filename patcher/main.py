@@ -1,21 +1,12 @@
 """Workflow patch script.
-
 This script injects the MDTOOL_LINK in the vanilla Archivematica workflow file.
-
 Usage:
-
   $ patcher /src/src/MCPServer/lib/assets/workflow.json -o /tmp/patched-workflow.json
-
 We go from this:
-
     LINK_A --------> LINK_B
-
 To this:
-
     LINK_A --------> INJECTED -------> LINK_B
-
 Which means that we need to:
-
 1. Inject the chain link.
 2. Make it point to the original LINK_B.
 3. Update LINK_A so it goes to our new chain link after execution.
@@ -53,6 +44,7 @@ CREATE_METS_V2_LINKS = (
 MDTOOL_LINK = {
     "config": {
         "@manager": "linkTaskManagerDirectories",
+        "@model": "StandardTaskConfig",
         "arguments": "--sipUUID \"%SIPUUID%\" --basePath \"%SIPDirectory%\"",
         "execute": "md_writer_v0.0",
         "filter_file_end": None,
@@ -134,18 +126,7 @@ def main(workflow_file, output_file=None):
         update_link_destination(workflow["links"][link_id], gen_id)
 
     with smart_open(output_file) as writer:
-        writer.write(json.dumps(workflow, ensure_ascii="False", sort_keys=True, indent=4))
-
-    # if output_file in ("-", "", None):
-    #     writer = sys.stdout
-    # else:
-    #     # TODO: close
-    #     writer = open(output_file, "w")
-    #
-    # writer.write(json.dumps(workflow))
-
-
-
+        writer.write(json.dumps(workflow, ensure_ascii=False, sort_keys=True, indent=2))
 
 
 if __name__ == "__main__":
@@ -154,4 +135,3 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", dest="output_file", help="Write location")
     args = parser.parse_args()
     main(args.workflow_file, args.output_file)
-
