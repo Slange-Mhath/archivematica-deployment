@@ -76,8 +76,8 @@
       - name: Change bag_with_empty_directories
         ansible.builtin.replace:
           path: /opt/archivematica/archivematica/src/MCPClient/lib/clientScripts/bag_with_empty_directories.py
-          regexp: 'payload_entries = _PAYLOAD_ENTRIES + ("METS.%s.xml" % sip_uuid,)'
-          replace: 'payload_entries = _PAYLOAD_ENTRIES + ("METS.%s.xml" % sip_uuid,"metadata_output.json",)'
+          regexp: '"METS.%s.xml" % sip_uuid,'
+          replace: '"METS.%s.xml" % sip_uuid,"metadata_output.json",'
 
 
 
