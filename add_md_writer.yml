@@ -2,6 +2,15 @@
 - hosts: localhost
   connection: local
   tasks:
+      - name: Check if Md_writer folder exists
+        stat:
+          path: /data/custom_playbooks/prd/add_md_writer/md_writer
+        register: md_writer_folder
+
+      - name: Delete md_writer folder
+        command: rm -r /data/custom_playbooks/prd/add_md_writer/md_writer
+        when: md_writer_folder.stat.exists
+
       - name: Check if the Workflow Patcher already exists
         stat:
           path: /data/custom_playbooks/prd/add_md_writer
@@ -59,13 +68,13 @@
           path: /opt/archivematica/archivematica/src/MCPClient/lib/clientScripts/md_writer.py
         register: md_writer_clientScript_result
 
-      - name: Move Md_writer.py to clientScripts
-        command: mv /data/custom_playbooks/prd/add_md_writer/md_writer/md_writer.py /opt/archivematica/archivematica/src/MCPClient/lib/clientScripts/md_writer.py
-        when: not md_writer_clientScript_result.stat.exists
-
       - name: Delete md_writer Repo
         command: rm -r /data/custom_playbooks/prd/add_md_writer/md_writer
         when: md_writer_clientScript_result.stat.exists
+        
+      - name: Move Md_writer.py to clientScripts
+        command: mv /data/custom_playbooks/prd/add_md_writer/md_writer/md_writer.py /opt/archivematica/archivematica/src/MCPClient/lib/clientScripts/md_writer.py
+        when: not md_writer_clientScript_result.stat.exists
 
       - name: Add md_writer to archivematicaClientModules
         blockinfile:
